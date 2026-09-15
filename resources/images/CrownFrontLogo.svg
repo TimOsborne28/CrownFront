@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 150" fill="none">
+  <defs>
+    <linearGradient id="brass" x1="15" y1="0" x2="114" y2="145" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f5ddb0"/><stop offset=".5" stop-color="#c7a369"/><stop offset="1" stop-color="#87673e"/>
+    </linearGradient>
+  </defs>
+  <path d="m66 9 49 18v53c0 25-24 45-49 57-25-12-49-32-49-57V27L66 9Z" fill="#1c2b26" stroke="url(#brass)" stroke-width="3"/>
+  <path d="m66 18 40 15v47c0 20-19 38-40 49-21-11-40-29-40-49V33l40-15Z" stroke="#8d734c"/>
+  <path d="m37 44 16 13 13-24 13 24 16-13-6 34H43l-6-34Z" fill="url(#brass)"/>
+  <path d="M43 85h46v6H43z" fill="#d9b67b"/>
+  <path d="m66 101 5 7-5 8-5-8 5-7Z" fill="#c7a369"/>
+  <text x="144" y="102" fill="#f0dfbd" font-family="Palatino Linotype, Book Antiqua, Palatino, Georgia, serif" font-size="79" font-weight="700" letter-spacing="2">CrownFront</text>
+  <path d="M147 121h564" stroke="#9c7b4b" stroke-width="1"/>
+  <path d="m431 117 4 4-4 4-4-4 4-4Z" fill="#c7a369"/>
+</svg>

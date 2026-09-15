@@ -1,0 +1,1496 @@
+import { html } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import { textDirection, translateText } from "../client/Utils";
+import { assetUrl } from "../core/AssetUrls";
+import { UserSettings } from "../core/game/UserSettings";
+import { BaseModal } from "./components/BaseModal";
+import "./components/Difficulties";
+import { modalHeader } from "./components/ui/ModalHeader";
+import { Platform } from "./Platform";
+import { TroubleshootingModal } from "./TroubleshootingModal";
+
+@customElement("help-modal")
+export class HelpModal extends BaseModal {
+  protected routerName = "help";
+
+  @state() private keybinds: Record<string, string> = this.getKeybinds();
+
+  private getKeybinds(): Record<string, string> {
+    return new UserSettings().keybinds(Platform.isMac);
+  }
+
+  private getKeyLabel(code: string): string {
+    if (!code) return "";
+
+    const specialLabels: Record<string, string> = {
+      ShiftLeft: "⇧ Shift",
+      ShiftRight: "⇧ Shift",
+      ControlLeft: "Ctrl",
+      ControlRight: "Ctrl",
+      AltLeft: "Alt",
+      AltRight: "Alt",
+      MetaLeft: "⌘",
+      MetaRight: "⌘",
+      Space: "Space",
+      Escape: "Esc",
+      Enter: "↵ Return",
+      ArrowUp: "↑",
+      ArrowDown: "↓",
+      ArrowLeft: "←",
+      ArrowRight: "→",
+      Period: ">",
+      Comma: "<",
+    };
+
+    if (specialLabels[code]) return specialLabels[code];
+    if (code.startsWith("Key") && code.length === 4) return code.slice(3);
+    if (code.startsWith("Digit")) return code.slice(5);
+    if (code.startsWith("Numpad")) return `Num ${code.slice(6)}`;
+
+    return code;
+  }
+
+  private renderKey(code: string) {
+    const label = this.getKeyLabel(code);
+    // Key names stay left-to-right even inside RTL locales so the badges
+    // (and combos like "Shift + click") never scramble.
+    return html`<span
+      dir="ltr"
+      class="inline-block min-w-[32px] text-center px-2 py-1 rounded bg-[#2a2a2a] border-b-2 border-[#1a1a1a] text-white font-mono text-xs font-bold mx-0.5"
+      >${label}</span
+    >`;
+  }
+
+  private renderDiagram(
+    rows: { key: string; icon?: string; value?: string }[],
+    options: { map?: boolean; ratio?: boolean } = {},
+  ) {
+    return html`
+      <figure class="help-diagram">
+        <figcaption>${translateText("help_modal.diagram_caption")}</figcaption>
+        ${options.map
+          ? html`
+              <svg viewBox="0 0 200 86" aria-hidden="true">
+                <path d="M1 1H199V85H1Z" fill="#24474a" stroke="#b89556"></path>
+                <path
+                  d="M1 1H118L128 18 110 38 120 54 94 85H1Z"
+                  fill="#756544"
+                  stroke="#d0b478"
+                ></path>
+                <path
+                  d="M28 65Q68 44 98 20"
+                  fill="none"
+                  stroke="#ebd5a1"
+                  stroke-dasharray="4 4"
+                ></path>
+                <image
+                  href=${assetUrl("images/CityIconWhite.svg")}
+                  x="35"
+                  y="26"
+                  width="32"
+                  height="32"
+                ></image>
+                <image
+                  href=${assetUrl("images/BoatIconWhite.svg")}
+                  x="148"
+                  y="35"
+                  width="30"
+                  height="30"
+                ></image>
+              </svg>
+            `
+          : ""}
+        <dl>
+          ${rows.map(
+            ({ key, icon, value }) => html`
+              <div class="help-diagram-row">
+                <dt>
+                  ${icon
+                    ? html`<img src=${assetUrl(`images/${icon}.svg`)} alt="" />`
+                    : ""}
+                  ${translateText(key)}
+                </dt>
+                ${value ? html`<dd>${value}</dd>` : ""}
+              </div>
+            `,
+          )}
+        </dl>
+        ${options.ratio
+          ? html`
+              <div class="help-diagram-ratio">
+                <span>${translateText("help_modal.diagram_ratio")}</span>
+                <div aria-hidden="true"><i></i></div>
+              </div>
+            `
+          : ""}
+      </figure>
+    `;
+  }
+
+  protected renderHeaderSlot() {
+    return modalHeader({
+      title: translateText("main.help"),
+      onBack: () => this.close(),
+      ariaLabel: translateText("common.back"),
+    });
+  }
+
+  protected renderBody() {
+    const keybinds = this.keybinds;
+
+    return html`
+      <style>
+        help-modal .help-diagram {
+          width: 210px;
+          max-width: 100%;
+          margin: 0;
+          padding: 14px;
+          color: #f0ddb3;
+          background: #29251e;
+          border: 1px solid #9d7a40;
+          box-shadow: 3px 4px 0 #15130f;
+          font-size: 12px;
+        }
+        help-modal .help-diagram figcaption {
+          margin-bottom: 12px;
+          color: #d0b478;
+          font-style: italic;
+        }
+        help-modal .help-diagram svg {
+          width: 100%;
+          margin-bottom: 10px;
+        }
+        help-modal .help-diagram dl {
+          margin: 0;
+        }
+        help-modal .help-diagram-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 7px 0;
+          border-bottom: 1px solid #5b4b32;
+        }
+        help-modal .help-diagram dt {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        help-modal .help-diagram dd {
+          margin: 0;
+          font-variant-numeric: tabular-nums;
+        }
+        help-modal .help-diagram img {
+          width: 22px;
+          height: 22px;
+          object-fit: contain;
+        }
+        help-modal .help-diagram-ratio {
+          margin-top: 14px;
+        }
+        help-modal .help-diagram-ratio > div {
+          height: 6px;
+          margin-top: 9px;
+          background: #161510;
+          border: 1px solid #9d7a40;
+        }
+        help-modal .help-diagram-ratio i {
+          display: block;
+          width: 50%;
+          height: 100%;
+          background: #d0b478;
+        }
+      </style>
+      <div
+        dir=${textDirection()}
+        class="prose prose-invert prose-sm max-w-none px-6 py-3
+          [&_a]:text-blue-400 [&_a:hover]:text-blue-300 transition-colors
+          [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:text-white [&_h1]:border-b [&_h1]:border-white/10 [&_h1]:pb-2
+          [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3 [&_h2]:text-blue-200
+          [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-blue-100
+          [&_ul]:ps-5 [&_ul]:list-disc [&_ul]:space-y-1
+          [&_li]:text-gray-300 [&_li]:leading-relaxed
+          [&_p]:text-gray-300 [&_p]:mb-3 [&_strong]:text-white [&_strong]:font-bold
+          [&_p]:[unicode-bidi:plaintext] [&_li]:[unicode-bidi:plaintext]
+          [&_td:nth-child(2)]:[unicode-bidi:plaintext]
+          [&_td:nth-child(3)]:[unicode-bidi:plaintext]"
+      >
+          <p>${translateText("main.subtitle")}</p>
+          <!-- In-game tutorial: starts a default solo game with the guide on -->
+          <section
+            class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/5 rounded-xl border border-white/10 px-5 py-4 mb-8"
+          >
+            <div>
+              <h3 class="!mt-0 !mb-1">
+                ${translateText("help_modal.in_game_tutorial")}
+              </h3>
+              <p class="!mb-0 text-sm">
+                ${translateText("help_modal.in_game_tutorial_desc")}
+              </p>
+            </div>
+            <button
+              class="shrink-0 hover:bg-white/5 px-6 py-2 text-xs font-bold transition-all duration-200 rounded-lg uppercase tracking-widest bg-malibu-blue/20 text-aquarius border border-malibu-blue/30 shadow-[var(--shadow-malibu-blue)]"
+              @click=${() =>
+                document.dispatchEvent(new CustomEvent("start-tutorial"))}
+            >
+              ${translateText("help_modal.in_game_tutorial_start")}
+            </button>
+          </section>
+
+          <!-- Local campaign notes -->
+          <div class="flex items-center gap-3 mb-3">
+            <div class="text-blue-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 4h7v16H4zM13 4h7v16h-7z"></path>
+              </svg>
+            </div>
+            <h3
+              class="text-xl font-bold uppercase tracking-widest text-white/90"
+            >
+              ${translateText("help_modal.video_tutorial")}
+            </h3>
+            <div
+              class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+            ></div>
+          </div>
+          <details
+            class="bg-white/5 rounded-xl border border-white/10 overflow-hidden mb-8"
+            aria-label=${translateText("help_modal.video_tutorial_title")}
+          >
+            <summary class="cursor-pointer px-4 py-3">
+              ${translateText("help_modal.video_tutorial_open")}
+            </summary>
+            <p class="px-4 pt-4">
+              ${translateText("help_modal.video_tutorial_note")}
+            </p>
+            <div class="flex flex-wrap gap-4 px-4 pb-4">
+              ${this.renderDiagram([
+                { key: "unit_type.factory", icon: "FactoryIconWhite" },
+                { key: "unit_type.railroad" },
+                { key: "unit_type.train" },
+                { key: "leaderboard.gold", icon: "GoldCoinIcon" },
+              ])}
+              ${this.renderDiagram(
+                [
+                  { key: "unit_type.port", icon: "PortIcon" },
+                  { key: "unit_type.trade_ship", icon: "BoatIconWhite" },
+                  { key: "leaderboard.gold", icon: "GoldCoinIcon" },
+                ],
+                { map: true },
+              )}
+            </div>
+          </details>
+
+          <!-- Troubleshooting Section -->
+          <div class="flex items-center gap-3 mb-3">
+            <div class="text-blue-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M2 20 L12 0 L22 20 L2 20"></path>
+                <line x1="12" y1="8" x2="12" y2="14"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h3
+              class="text-xl font-bold uppercase tracking-widest text-white/90"
+            >
+              ${translateText("main.troubleshooting")}
+            </h3>
+            <div
+              class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+            ></div>
+          </div>
+          <section>
+            <div class="w-full flex flex-col items-center">
+              <p class="mb-6 text-white/70 text-sm">
+                ${translateText("help_modal.troubleshooting_desc")}
+              </p>
+              <button
+                id="troubleshooting-button"
+                class="hover:bg-white/5 px-6 py-2 text-xs font-bold transition-all duration-200 rounded-lg uppercase tracking-widest bg-malibu-blue/20 text-aquarius border border-malibu-blue/30 shadow-[var(--shadow-malibu-blue)]"
+                data-page="page-troubleshooting"
+                @click="${this.openTroubleshooting}"
+                data-i18n="main.go_to_troubleshooting"
+              >
+                <span
+                  class="relative z-10 text-2xl"
+                  data-i18n="main.go_to_troubleshooting"
+                ></span>
+              </button>
+            </div>
+          </section>
+          <!-- Hotkeys Section -->
+          <div class="flex items-center gap-3 mb-3">
+            <div class="text-blue-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5 text-blue-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                <path d="M6 8h.001"></path>
+                <path d="M10 8h.001"></path>
+                <path d="M14 8h.001"></path>
+                <path d="M18 8h.001"></path>
+                <path d="M6 12h.001"></path>
+                <path d="M10 12h.001"></path>
+                <path d="M14 12h.001"></path>
+                <path d="M18 12h.001"></path>
+                <path d="M6 16h12"></path>
+              </svg>
+            </div>
+            <h3
+              class="text-xl font-bold uppercase tracking-widest text-white/90"
+            >
+              ${translateText("help_modal.hotkeys")}
+            </h3>
+            <div
+              class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+            ></div>
+          </div>
+          <section
+            class="bg-white/5 rounded-xl border border-white/10 overflow-hidden"
+          >
+            <div class="pt-2 pb-4 px-4 overflow-x-auto">
+              <table class="w-full text-sm border-separate border-spacing-y-1">
+                <thead>
+                  <tr
+                    class="text-white/40 text-xs uppercase tracking-wider text-start"
+                  >
+                    <th class="pb-2 ps-4">
+                      ${translateText("help_modal.table_key")}
+                    </th>
+                    <th class="pb-2">
+                      ${translateText("help_modal.table_action")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="text-white/80">
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      ${this.renderKey("Escape")}
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_esc")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      ${this.renderKey("Enter")}
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_enter")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      ${this.renderKey(keybinds.toggleView)}
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("user_setting.toggle_view_desc")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      ${this.renderKey(keybinds.coordinateGrid)}
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_coordinate_grid")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      ${this.renderKey(keybinds.swapDirection)}
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.bomb_direction")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      <div class="inline-flex items-center gap-2">
+                        ${this.renderKey(keybinds.shiftKey)}
+                        <span class="text-white/40 font-bold">+</span>
+                        <div
+                          class="w-5 h-8 border border-white/40 rounded-full relative"
+                        >
+                          <div
+                            class="absolute top-0 left-0 w-1/2 h-1/2 bg-red-500/80 rounded-tl-full"
+                          ></div>
+                          <div
+                            class="w-0.5 h-1.5 bg-white/40 rounded-full absolute top-1.5 left-1/2 -translate-x-1/2"
+                          ></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_attack_altclick")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      <div class="inline-flex items-center gap-2">
+                        ${this.renderKey(keybinds.buildMenuModifier)}
+                        <span class="text-white/40 font-bold">+</span>
+                        <div
+                          class="w-5 h-8 border border-white/40 rounded-full relative"
+                        >
+                          <div
+                            class="absolute top-0 left-0 w-1/2 h-1/2 bg-red-500/80 rounded-tl-full"
+                          ></div>
+                          <div
+                            class="w-0.5 h-1.5 bg-white/40 rounded-full absolute top-1.5 left-1/2 -translate-x-1/2"
+                          ></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_build")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      <div class="inline-flex items-center gap-2">
+                        ${this.renderKey(keybinds.emojiMenuModifier)}
+                        <span class="text-white/40 font-bold">+</span>
+                        <div
+                          class="w-5 h-8 border border-white/40 rounded-full relative"
+                        >
+                          <div
+                            class="absolute top-0 left-0 w-1/2 h-1/2 bg-red-500/80 rounded-tl-full"
+                          ></div>
+                          <div
+                            class="w-0.5 h-1.5 bg-white/40 rounded-full absolute top-1.5 left-1/2 -translate-x-1/2"
+                          ></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_emote")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      ${this.renderKey(keybinds.centerCamera)}
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("user_setting.center_camera_desc")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      ${this.renderKey(keybinds.pauseGame)}
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_pause_game")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      <div class="flex flex-wrap gap-2">
+                        ${this.renderKey(keybinds.gameSpeedDown)}
+                        ${this.renderKey(keybinds.gameSpeedUp)}
+                      </div>
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_game_speed")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      <div class="flex flex-wrap gap-2">
+                        ${this.renderKey(keybinds.zoomOut)}
+                        ${this.renderKey(keybinds.zoomIn)}
+                      </div>
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_zoom")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      <div class="flex flex-wrap gap-1 max-w-[200px]">
+                        ${this.renderKey(keybinds.moveUp)}
+                        ${this.renderKey(keybinds.moveLeft)}
+                        ${this.renderKey(keybinds.moveDown)}
+                        ${this.renderKey(keybinds.moveRight)}
+                      </div>
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_move_camera")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      <div class="flex flex-wrap gap-2">
+                        ${this.renderKey(keybinds.attackRatioDown)}
+                        ${this.renderKey(keybinds.attackRatioUp)}
+                      </div>
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_ratio_change")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      <div class="inline-flex items-center gap-2">
+                        ${this.renderKey(keybinds.shiftKey)}
+                        <span class="text-white/40 font-bold">+</span>
+                        <div class="flex items-center gap-1">
+                          <div
+                            class="w-5 h-8 border border-white/40 rounded-full relative"
+                          >
+                            <div
+                              class="w-0.5 h-2 bg-red-400 rounded-full absolute top-1.5 left-1/2 -translate-x-1/2"
+                            ></div>
+                          </div>
+                          <div class="flex flex-col text-[10px] text-white/50">
+                            <span>↑</span>
+                            <span>↓</span>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_ratio_change")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      <div class="inline-flex items-center gap-2">
+                        ${this.renderKey(keybinds.altKey)}
+                        <span class="text-white/40 font-bold">+</span>
+                        ${this.renderKey(keybinds.resetGfx)}
+                      </div>
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_reset_gfx")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      <div
+                        class="w-5 h-8 border border-white/40 rounded-full relative"
+                      >
+                        <div
+                          class="w-0.5 h-2 bg-red-400 rounded-full absolute top-1.5 left-1/2 -translate-x-1/2"
+                        ></div>
+                      </div>
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_auto_upgrade")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      <div class="inline-flex items-center gap-2">
+                        ${this.renderKey(keybinds.boxSelectWarships)}
+                        <span class="text-white/40 font-bold">+</span>
+                        <span class="text-white/50 text-xs"
+                          >${translateText("help_modal.drag")}</span
+                        >
+                      </div>
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_warship_multiselect")}
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5">
+                      ${this.renderKey(keybinds.selectAllWarships)}
+                    </td>
+                    <td class="py-3 border-b border-white/5 text-white/70">
+                      ${translateText("help_modal.action_warship_selectall")}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- UI Interface Section -->
+          <section class="mb-8 mt-8">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="text-blue-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+              </div>
+              <h3
+                class="text-xl font-bold uppercase tracking-widest text-white/90"
+              >
+                ${translateText("help_modal.ui_section")}
+              </h3>
+              <div
+                class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+              ></div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
+              <!-- Leaderboard -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-6 flex flex-col md:flex-row gap-6 hover:bg-white/5 transition-colors"
+              >
+                <div class="flex flex-col items-center gap-3 shrink-0">
+                  <span
+                    class="text-xs font-bold uppercase tracking-wider text-blue-300"
+                    >${translateText("help_modal.ui_leaderboard")}</span
+                  >
+                  ${this.renderDiagram([
+                    {
+                      key: "help_modal.diagram_example_player",
+                      icon: "CrownIcon",
+                      value: "1",
+                    },
+                    { key: "leaderboard.owned", value: "12%" },
+                    {
+                      key: "leaderboard.gold",
+                      icon: "GoldCoinIcon",
+                      value: "40K",
+                    },
+                    {
+                      key: "leaderboard.troops",
+                      icon: "SoldierIcon",
+                      value: "120K",
+                    },
+                  ])}
+                </div>
+                <div
+                  class="flex items-center text-white/70 text-sm leading-relaxed"
+                >
+                  <p>${translateText("help_modal.ui_leaderboard_desc")}</p>
+                </div>
+              </div>
+
+              <!-- Control Panel -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-6 flex flex-col md:flex-row gap-6 hover:bg-white/5 transition-colors"
+              >
+                <div class="flex flex-col items-center gap-3 shrink-0">
+                  <span
+                    class="text-xs font-bold uppercase tracking-wider text-blue-300"
+                    >${translateText("help_modal.ui_control")}</span
+                  >
+                  ${this.renderDiagram(
+                    [
+                      {
+                        key: "leaderboard.gold",
+                        icon: "GoldCoinIcon",
+                        value: "40K",
+                      },
+                      {
+                        key: "leaderboard.troops",
+                        icon: "SoldierIcon",
+                        value: "120K",
+                      },
+                    ],
+                    { ratio: true },
+                  )}
+                </div>
+                <div class="flex flex-col justify-center text-white/70 text-sm">
+                  <p class="mb-4 leading-relaxed">
+                    ${translateText("help_modal.ui_control_desc")}
+                  </p>
+                  <ul class="space-y-2 list-disc ps-4 text-white/60">
+                    <li>${translateText("help_modal.ui_gold")}</li>
+                    <li>${translateText("help_modal.ui_attack_ratio")}</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Events Panel -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-6 flex flex-col md:flex-row gap-6 hover:bg-white/5 transition-colors"
+              >
+                <div class="flex flex-col items-center gap-3 shrink-0">
+                  <span
+                    class="text-xs font-bold uppercase tracking-wider text-blue-300"
+                    >${translateText("help_modal.ui_events")}</span
+                  >
+                  ${this.renderDiagram([
+                    {
+                      key: "help_modal.diagram_alliance",
+                      icon: "AllianceIconWhite",
+                    },
+                    { key: "help_modal.diagram_attack", icon: "SwordIcon" },
+                    { key: "player_panel.chat", icon: "ChatIconWhite" },
+                  ])}
+                </div>
+                <div class="flex flex-col justify-center text-white/70 text-sm">
+                  <p class="mb-4 leading-relaxed">
+                    ${translateText("help_modal.ui_events_desc")}
+                  </p>
+                  <ul class="space-y-2 list-disc ps-4 text-white/60">
+                    <li>${translateText("help_modal.ui_events_alliance")}</li>
+                    <li>${translateText("help_modal.ui_events_attack")}</li>
+                    <li>${translateText("help_modal.ui_events_quickchat")}</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Options -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-6 flex flex-col md:flex-row gap-6 hover:bg-white/5 transition-colors"
+              >
+                <div class="flex flex-col items-center gap-3 shrink-0">
+                  <span
+                    class="text-xs font-bold uppercase tracking-wider text-blue-300"
+                    >${translateText("help_modal.ui_options")}</span
+                  >
+                  ${this.renderDiagram([
+                    { key: "game_info_modal.duration", value: "04:32" },
+                    { key: "replay_panel.game_speed", value: "1×" },
+                    { key: "user_setting.pause_game", icon: "PauseIconWhite" },
+                    { key: "main.settings" },
+                    { key: "main.quit" },
+                  ])}
+                </div>
+                <div class="flex flex-col justify-center text-white/70 text-sm">
+                  <p class="mb-4 leading-relaxed">
+                    ${translateText("help_modal.ui_options_desc")}
+                  </p>
+                  <ul class="space-y-2 list-disc ps-4 text-white/60">
+                    <li>${translateText("help_modal.option_timer")}</li>
+                    <li>${translateText("help_modal.option_speed")}</li>
+                    <li>${translateText("help_modal.option_pause")}</li>
+                    <li>${translateText("help_modal.option_settings")}</li>
+                    <li>${translateText("help_modal.option_exit")}</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Player Overlay -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-6 flex flex-col md:flex-row gap-6 hover:bg-white/5 transition-colors"
+              >
+                <div class="flex flex-col items-center gap-3 shrink-0">
+                  <span
+                    class="text-xs font-bold uppercase tracking-wider text-blue-300"
+                    >${translateText("help_modal.ui_playeroverlay")}</span
+                  >
+                  ${this.renderDiagram(
+                    [
+                      {
+                        key: "player_type.nation",
+                        value: translateText("relation.friendly"),
+                      },
+                      {
+                        key: "leaderboard.troops",
+                        icon: "SoldierIcon",
+                        value: "120K",
+                      },
+                      {
+                        key: "unit_type.city",
+                        icon: "CityIconWhite",
+                        value: "2",
+                      },
+                      {
+                        key: "unit_type.warship",
+                        icon: "BattleshipIconWhite",
+                        value: "1",
+                      },
+                    ],
+                    { map: true },
+                  )}
+                </div>
+                <div
+                  class="flex items-center text-white/70 text-sm leading-relaxed"
+                >
+                  <p>${translateText("help_modal.ui_playeroverlay_desc")}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Radial Menu Section -->
+          <section class="mb-8">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="text-blue-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </div>
+              <h3
+                class="text-xl font-bold uppercase tracking-widest text-white/90"
+              >
+                ${translateText("help_modal.radial_title")}
+              </h3>
+              <div
+                class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+              ></div>
+            </div>
+
+            <div
+              class="bg-black/20 rounded-xl border border-white/10 p-6 flex flex-col md:flex-row gap-6 hover:bg-white/5 transition-colors"
+            >
+              <div class="flex flex-col gap-4 shrink-0">
+                ${this.renderDiagram(
+                  [
+                    { key: "chat.cat.attack", icon: "SwordIcon" },
+                    {
+                      key: "help_modal.build_menu_title",
+                      icon: "BuildIconWhite",
+                    },
+                    { key: "help_modal.info_title", icon: "InfoIcon" },
+                    { key: "unit_type.boat", icon: "BoatIconWhite" },
+                    {
+                      key: "player_panel.send_alliance",
+                      icon: "AllianceIconWhite",
+                    },
+                  ],
+                  { map: true },
+                )}
+                ${this.renderDiagram([
+                  {
+                    key: "player_panel.break_alliance",
+                    icon: "TraitorIconWhite",
+                  },
+                  {
+                    key: "player_panel.send_troops",
+                    icon: "DonateTroopIconWhite",
+                  },
+                  {
+                    key: "player_panel.send_gold",
+                    icon: "DonateGoldIconWhite",
+                  },
+                ])}
+              </div>
+              <div class="text-white/70 text-sm">
+                <p class="mb-4 leading-relaxed">
+                  ${translateText("help_modal.radial_desc")}
+                </p>
+                <ul class="space-y-3">
+                  <li class="flex items-center gap-3">
+                    <img
+                      src=${assetUrl("images/BuildIconWhite.svg")}
+                      class="w-8 h-8 scale-75 origin-left"
+                    />
+                    <span>${translateText("help_modal.radial_build")}</span>
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <img
+                      src=${assetUrl("images/InfoIcon.svg")}
+                      class="w-8 h-8 scale-75 origin-left"
+                    />
+                    <span>${translateText("help_modal.radial_info")}</span>
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <img
+                      src=${assetUrl("images/BoatIconWhite.svg")}
+                      class="w-8 h-8 scale-75 origin-left"
+                    />
+                    <span>${translateText("help_modal.radial_boat")}</span>
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <img
+                      src=${assetUrl("images/AllianceIconWhite.svg")}
+                      class="w-8 h-8 scale-75 origin-left"
+                    />
+                    <span>${translateText("help_modal.info_alliance")}</span>
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <img
+                      src=${assetUrl("images/TraitorIconWhite.svg")}
+                      class="w-8 h-8 scale-75 origin-left"
+                    />
+                    <span>${translateText("help_modal.ally_betray")}</span>
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <img
+                      src=${assetUrl("images/DonateTroopIconWhite.svg")}
+                      class="w-8 h-8 scale-75 origin-left"
+                    />
+                    <span
+                      >${translateText("help_modal.radial_donate_troops")}</span
+                    >
+                  </li>
+                  <li class="flex items-center gap-3">
+                    <img
+                      src=${assetUrl("images/DonateGoldIconWhite.svg")}
+                      class="w-8 h-8 scale-75 origin-left"
+                    />
+                    <span
+                      >${translateText("help_modal.radial_donate_gold")}</span
+                    >
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- Info/Ally Panels Section -->
+          <section class="mb-8">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="text-blue-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+              </div>
+              <h3
+                class="text-xl font-bold uppercase tracking-widest text-white/90"
+              >
+                ${translateText("help_modal.info_title")}
+              </h3>
+              <div
+                class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+              ></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Enemy Info -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-6 flex flex-col gap-6 hover:bg-white/5 transition-colors"
+              >
+                <div class="flex flex-col items-center gap-3">
+                  <span
+                    class="text-xs font-bold uppercase tracking-wider text-blue-300"
+                    >${translateText("help_modal.info_enemy_panel")}</span
+                  >
+                  ${this.renderDiagram([
+                    { key: "help_modal.diagram_example_player" },
+                    {
+                      key: "player_panel.troops",
+                      icon: "SoldierIcon",
+                      value: "120K",
+                    },
+                    {
+                      key: "player_panel.gold",
+                      icon: "GoldCoinIcon",
+                      value: "40K",
+                    },
+                    { key: "player_panel.target", icon: "TargetIconWhite" },
+                    { key: "player_panel.stop_trade", icon: "StopIconWhite" },
+                  ])}
+                </div>
+                <div class="text-white/70 text-sm">
+                  <p class="mb-4 leading-relaxed">
+                    ${translateText("help_modal.info_enemy_desc")}
+                  </p>
+                  <ul class="space-y-3">
+                    <li class="flex items-center gap-3">
+                      <img
+                        src=${assetUrl("images/ChatIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                      <span>${translateText("help_modal.info_chat")}</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                      <img
+                        src=${assetUrl("images/TargetIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                      <span>${translateText("help_modal.info_target")}</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                      <img
+                        src=${assetUrl("images/AllianceIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                      <span>${translateText("help_modal.info_alliance")}</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                      <img
+                        src=${assetUrl("images/EmojiIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                      <span>${translateText("help_modal.info_emoji")}</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                      <img
+                        src=${assetUrl("images/StopIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                        loading="lazy"
+                      />
+                      <span>${translateText("help_modal.info_trade")}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Ally Info -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-6 flex flex-col gap-6 hover:bg-white/5 transition-colors"
+              >
+                <div class="flex flex-col items-center gap-3">
+                  <span
+                    class="text-xs font-bold uppercase tracking-wider text-blue-300"
+                    >${translateText("help_modal.info_ally_panel")}</span
+                  >
+                  ${this.renderDiagram([
+                    {
+                      key: "player_panel.alliances",
+                      icon: "AllianceIconWhite",
+                    },
+                    {
+                      key: "player_panel.send_troops",
+                      icon: "DonateTroopIconWhite",
+                    },
+                    {
+                      key: "player_panel.send_gold",
+                      icon: "DonateGoldIconWhite",
+                    },
+                    {
+                      key: "player_panel.break_alliance",
+                      icon: "TraitorIconWhite",
+                    },
+                  ])}
+                </div>
+                <div class="text-white/70 text-sm">
+                  <p class="mb-4 leading-relaxed">
+                    ${translateText("help_modal.info_ally_desc")}
+                  </p>
+                  <ul class="space-y-3">
+                    <li class="flex items-center gap-3">
+                      <img
+                        src=${assetUrl("images/TraitorIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                      <span>${translateText("help_modal.ally_betray")}</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                      <img
+                        src=${assetUrl("images/DonateTroopIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                      <span>${translateText("help_modal.ally_donate")}</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                      <img
+                        src=${assetUrl("images/DonateGoldIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                      <span
+                        >${translateText("help_modal.ally_donate_gold")}</span
+                      >
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Build Menu Section -->
+          <section class="mb-8">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="text-blue-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+                  <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                  <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
+                </svg>
+              </div>
+              <h3
+                class="text-xl font-bold uppercase tracking-widest text-white/90"
+              >
+                ${translateText("help_modal.build_menu_title")}
+              </h3>
+              <div
+                class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+              ></div>
+            </div>
+
+            <p class="mb-4 text-white/70 text-sm">
+              ${translateText("help_modal.build_menu_desc")}
+            </p>
+            <p class="mb-4 text-white/70 text-sm">
+              ${translateText("help_modal.doom_weapons_note")}
+            </p>
+
+            <div class="overflow-hidden rounded-xl border border-white/10">
+              <table class="w-full border-collapse">
+                <thead class="bg-white/10">
+                  <tr>
+                    <th
+                      class="py-3 ps-4 text-start text-xs font-bold uppercase tracking-wider text-blue-300 w-[20%]"
+                    >
+                      ${translateText("help_modal.build_name")}
+                    </th>
+                    <th
+                      class="py-3 text-start text-xs font-bold uppercase tracking-wider text-blue-300 w-[8%]"
+                    >
+                      ${translateText("help_modal.build_icon")}
+                    </th>
+                    <th
+                      class="py-3 text-start text-xs font-bold uppercase tracking-wider text-blue-300"
+                    >
+                      ${translateText("help_modal.build_desc")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="text-white/80">
+                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5 font-medium">
+                      ${translateText("unit_type.city")}
+                    </td>
+                    <td class="py-3 border-b border-white/5">
+                      <img
+                        src=${assetUrl("images/CityIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                    </td>
+                    <td
+                      class="py-3 border-b border-white/5 text-white/60 text-sm"
+                    >
+                      ${translateText("help_modal.build_city_desc")}
+                    </td>
+                  </tr>
+                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5 font-medium">
+                      ${translateText("unit_type.defense_post")}
+                    </td>
+                    <td class="py-3 border-b border-white/5">
+                      <img
+                        src=${assetUrl("images/ShieldIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                    </td>
+                    <td
+                      class="py-3 border-b border-white/5 text-white/60 text-sm"
+                    >
+                      ${translateText("help_modal.build_defense_desc")}
+                    </td>
+                  </tr>
+                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5 font-medium">
+                      ${translateText("unit_type.port")}
+                    </td>
+                    <td class="py-3 border-b border-white/5">
+                      <img
+                        src=${assetUrl("images/PortIcon.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                    </td>
+                    <td
+                      class="py-3 border-b border-white/5 text-white/60 text-sm"
+                    >
+                      ${translateText("help_modal.build_port_desc")}
+                    </td>
+                  </tr>
+                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5 font-medium">
+                      ${translateText("unit_type.factory")}
+                    </td>
+                    <td class="py-3 border-b border-white/5">
+                      <img
+                        src=${assetUrl("images/FactoryIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                    </td>
+                    <td
+                      class="py-3 border-b border-white/5 text-white/60 text-sm"
+                    >
+                      ${translateText("help_modal.build_factory_desc")}
+                    </td>
+                  </tr>
+                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5 font-medium">
+                      ${translateText("unit_type.warship")}
+                    </td>
+                    <td class="py-3 border-b border-white/5">
+                      <img
+                        src=${assetUrl("images/BattleshipIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                    </td>
+                    <td
+                      class="py-3 border-b border-white/5 text-white/60 text-sm"
+                    >
+                      ${translateText("help_modal.build_warship_desc")}
+                    </td>
+                  </tr>
+                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5 font-medium">
+                      ${translateText("unit_type.missile_silo")}
+                    </td>
+                    <td class="py-3 border-b border-white/5">
+                      <img
+                        src=${assetUrl("images/MissileSiloIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                    </td>
+                    <td
+                      class="py-3 border-b border-white/5 text-white/60 text-sm"
+                    >
+                      ${translateText("help_modal.build_silo_desc")}
+                    </td>
+                  </tr>
+                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5 font-medium">
+                      ${translateText("unit_type.sam_launcher")}
+                    </td>
+                    <td class="py-3 border-b border-white/5">
+                      <img
+                        src=${assetUrl("images/SamLauncherIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                    </td>
+                    <td
+                      class="py-3 border-b border-white/5 text-white/60 text-sm"
+                    >
+                      ${translateText("help_modal.build_sam_desc")}
+                    </td>
+                  </tr>
+                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5 font-medium">
+                      ${translateText("unit_type.atom_bomb")}
+                    </td>
+                    <td class="py-3 border-b border-white/5">
+                      <img
+                        src=${assetUrl("images/NukeIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                    </td>
+                    <td
+                      class="py-3 border-b border-white/5 text-white/60 text-sm"
+                    >
+                      ${translateText("help_modal.build_atom_desc")}
+                    </td>
+                  </tr>
+                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5 font-medium">
+                      ${translateText("unit_type.hydrogen_bomb")}
+                    </td>
+                    <td class="py-3 border-b border-white/5">
+                      <img
+                        src=${assetUrl("images/MushroomCloudIconWhite.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                    </td>
+                    <td
+                      class="py-3 border-b border-white/5 text-white/60 text-sm"
+                    >
+                      ${translateText("help_modal.build_hydrogen_desc")}
+                    </td>
+                  </tr>
+                  <tr class="bg-white/5 hover:bg-white/10 transition-colors">
+                    <td class="py-3 ps-4 border-b border-white/5 font-medium">
+                      ${translateText("unit_type.mirv")}
+                    </td>
+                    <td class="py-3 border-b border-white/5">
+                      <img
+                        src=${assetUrl("images/MIRVIcon.svg")}
+                        class="w-8 h-8 scale-75 origin-left"
+                      />
+                    </td>
+                    <td
+                      class="py-3 border-b border-white/5 text-white/60 text-sm"
+                    >
+                      ${translateText("help_modal.build_mirv_desc")}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Player Icons Section -->
+          <section class="mb-4">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="text-blue-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <h3
+                class="text-xl font-bold uppercase tracking-widest text-white/90"
+              >
+                ${translateText("help_modal.player_icons")}
+              </h3>
+              <div
+                class="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"
+              ></div>
+            </div>
+
+            <p class="mb-6 text-white/70 text-sm">
+              ${translateText("help_modal.icon_desc")}
+            </p>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+              <!-- Crown -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3 hover:bg-white/5 transition-colors"
+              >
+                <img
+                  src=${assetUrl("images/CrownIcon.svg")}
+                  alt=""
+                  class="rounded shadow-lg border border-white/10 h-24 w-auto object-contain"
+                  loading="lazy"
+                />
+                <span
+                  class="text-xs font-bold uppercase tracking-wider text-white text-center"
+                >
+                  ${translateText("help_modal.icon_crown")}
+                </span>
+              </div>
+
+              <!-- Traitor -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3 hover:bg-white/5 transition-colors"
+              >
+                <img
+                  src=${assetUrl("images/TraitorIconWhite.svg")}
+                  alt=""
+                  class="rounded shadow-lg border border-white/10 h-24 w-auto object-contain"
+                  loading="lazy"
+                />
+                <span
+                  class="text-xs font-bold uppercase tracking-wider text-white text-center"
+                >
+                  ${translateText("help_modal.icon_traitor")}
+                </span>
+              </div>
+
+              <!-- Ally -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3 hover:bg-white/5 transition-colors"
+              >
+                <img
+                  src=${assetUrl("images/AllianceIconWhite.svg")}
+                  alt=""
+                  class="rounded shadow-lg border border-white/10 h-24 w-auto object-contain"
+                  loading="lazy"
+                />
+                <span
+                  class="text-xs font-bold uppercase tracking-wider text-white text-center"
+                >
+                  ${translateText("help_modal.icon_ally")}
+                </span>
+              </div>
+
+              <!-- Embargo -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3 hover:bg-white/5 transition-colors"
+              >
+                <img
+                  src=${assetUrl("images/EmbargoWhiteIcon.svg")}
+                  alt=""
+                  class="rounded shadow-lg border border-white/10 h-24 w-auto object-contain"
+                  loading="lazy"
+                />
+                <span
+                  class="text-xs font-bold uppercase tracking-wider text-white text-center"
+                >
+                  ${translateText("help_modal.icon_embargo")}
+                </span>
+              </div>
+
+              <!-- Alliance Request -->
+              <div
+                class="bg-black/20 rounded-xl border border-white/10 p-4 flex flex-col items-center gap-3 hover:bg-white/5 transition-colors"
+              >
+                <img
+                  src=${assetUrl("images/AllianceRequestWhiteIcon.svg")}
+                  alt=""
+                  class="rounded shadow-lg border border-white/10 h-24 w-auto object-contain"
+                  loading="lazy"
+                />
+                <span
+                  class="text-xs font-bold uppercase tracking-wider text-white text-center"
+                >
+                  ${translateText("help_modal.icon_request")}
+                </span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    `;
+  }
+
+  openTroubleshooting() {
+    const troubleshootingModal = document.querySelector(
+      "troubleshooting-modal",
+    ) as TroubleshootingModal;
+    if (
+      !troubleshootingModal ||
+      !(troubleshootingModal instanceof TroubleshootingModal)
+    ) {
+      console.warn("Troubleshooting modal element not found");
+      return;
+    }
+    troubleshootingModal.open();
+  }
+
+  protected onOpen(): void {
+    this.keybinds = this.getKeybinds();
+  }
+}

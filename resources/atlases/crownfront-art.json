@@ -1,0 +1,148 @@
+{
+  "license": "CC-BY-SA-4.0",
+  "generator": "scripts/generate-crownfront-art.mjs",
+  "structures": [
+    "Keep",
+    "Harbor",
+    "Foundry",
+    "Watchtower",
+    "Ballista Tower",
+    "Siege Workshop"
+  ],
+  "units": [
+    {
+      "name": "transportship",
+      "column": 0,
+      "worldSize": 5
+    },
+    {
+      "name": "tradeship",
+      "column": 1,
+      "worldSize": 5
+    },
+    {
+      "name": "warship",
+      "column": 2,
+      "worldSize": 11
+    },
+    {
+      "name": "atombomb",
+      "column": 3,
+      "worldSize": 7
+    },
+    {
+      "name": "hydrogenbomb",
+      "column": 4,
+      "worldSize": 9
+    },
+    {
+      "name": "mirv2",
+      "column": 5,
+      "worldSize": 13
+    },
+    {
+      "name": "samMissile",
+      "column": 6,
+      "worldSize": 3
+    },
+    {
+      "name": "shell",
+      "column": 7,
+      "worldSize": 1
+    },
+    {
+      "name": "mirvWarhead",
+      "column": 8,
+      "worldSize": 3
+    },
+    {
+      "name": "trainEngine",
+      "column": 9,
+      "worldSize": 5
+    },
+    {
+      "name": "trainCarriage",
+      "column": 10,
+      "worldSize": 5
+    },
+    {
+      "name": "trainCarriageLoaded",
+      "column": 11,
+      "worldSize": 5
+    }
+  ],
+  "effects": [
+    {
+      "name": "nukeExplosion",
+      "width": 60,
+      "height": 60,
+      "frames": 9
+    },
+    {
+      "name": "samExplosion",
+      "width": 48,
+      "height": 38,
+      "frames": 9
+    },
+    {
+      "name": "buildingExplosion",
+      "width": 17,
+      "height": 15,
+      "frames": 10
+    },
+    {
+      "name": "unitExplosion",
+      "width": 19,
+      "height": 19,
+      "frames": 4
+    },
+    {
+      "name": "miniExplosion",
+      "width": 13,
+      "height": 12,
+      "frames": 4
+    },
+    {
+      "name": "sinkingShip",
+      "width": 16,
+      "height": 14,
+      "frames": 14
+    },
+    {
+      "name": "minifire",
+      "width": 7,
+      "height": 13,
+      "frames": 6
+    },
+    {
+      "name": "smoke",
+      "width": 11,
+      "height": 12,
+      "frames": 4
+    },
+    {
+      "name": "bigsmoke",
+      "width": 24,
+      "height": 16,
+      "frames": 5
+    },
+    {
+      "name": "smokeAndFire",
+      "width": 24,
+      "height": 16,
+      "frames": 5
+    },
+    {
+      "name": "dust",
+      "width": 9,
+      "height": 7,
+      "frames": 3
+    },
+    {
+      "name": "conquestSword",
+      "width": 21,
+      "height": 20,
+      "frames": 10
+    }
+  ]
+}

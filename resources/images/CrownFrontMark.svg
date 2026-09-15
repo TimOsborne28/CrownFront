@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 144" fill="none">
+  <defs>
+    <linearGradient id="brass" x1="20" y1="0" x2="104" y2="144" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f5ddb0"/><stop offset=".45" stop-color="#c7a369"/><stop offset="1" stop-color="#806039"/>
+    </linearGradient>
+  </defs>
+  <path d="M60 5 111 24v57c0 25-25 46-51 58C34 127 9 106 9 81V24L60 5Z" fill="#191e1c" stroke="url(#brass)" stroke-width="4"/>
+  <path d="m60 14 42 16v50c0 20-20 40-42 51-22-11-42-31-42-51V30l42-16Z" fill="#273b35" stroke="#8d734c"/>
+  <path d="M60 19v105c20-11 36-28 36-45V34L60 19Z" fill="#1f302b"/>
+  <path d="m29 44 17 13 14-25 14 25 17-13-6 36H35l-6-36Z" fill="url(#brass)"/>
+  <path d="M35 87h50v6H35z" fill="#d9b67b"/>
+  <path d="m60 101 5 7-5 8-5-8 5-7Z" fill="#c7a369"/>
+  <path d="M38 70h44" stroke="#6f512e" stroke-width="2"/>
+</svg>

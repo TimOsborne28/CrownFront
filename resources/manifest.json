@@ -1,0 +1,21 @@
+{
+  "icons": [
+    {
+      "purpose": "any",
+      "sizes": "any",
+      "src": "/images/Favicon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "orientation": "any",
+  "display_override": ["fullscreen", "minimal-ui"],
+  "display": "standalone",
+  "dir": "auto",
+  "lang": "en",
+  "name": "CrownFront",
+  "short_name": "CrownFront",
+  "theme_color": "#1b211c",
+  "background_color": "#141b17",
+  "start_url": "/",
+  "id": "/"
+}

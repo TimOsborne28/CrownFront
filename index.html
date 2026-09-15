@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en" class="h-full preload" translate="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title data-i18n="crownfront.title">CrownFront</title>
+    <meta
+      name="description"
+      content="CrownFront: a medieval real-time strategy game. An unofficial modified edition of OpenFront."
+    />
+    <meta name="theme-color" content="#1b211c" />
+    <link rel="manifest" href="<%- manifestHref %>" />
+    <link rel="icon" type="image/svg+xml" href="<%- faviconHref %>" />
+    <style>
+      .preload {
+        visibility: hidden;
+        opacity: 0;
+      }
+      html,
+      body {
+        touch-action: manipulation;
+      }
+    </style>
+    <script>
+      window.CROWNFRONT_LOCAL = true;
+      window.BOOTSTRAP_CONFIG = {
+        gitCommit: <%- gitCommit %>,
+        assetManifest: <%- assetManifest %>,
+        cdnBase: <%- cdnBase %>,
+        gameEnv: <%- gameEnv %>,<%- typeof cluster !== "undefined" && cluster ? "\n        cluster: " + cluster + "," : "" %><%- typeof instanceLetter !== "undefined" && instanceLetter ? "\n        instanceLetter: " + instanceLetter + "," : "" %>
+        turnstileSiteKey: <%- turnstileSiteKey %>,
+        jwtAudience: <%- jwtAudience %>,<%- typeof instanceId !== "undefined" && instanceId ? "\n        instanceId: " + instanceId + "," : "" %><%- typeof serverHost !== "undefined" && serverHost ? "\n        serverHost: " + serverHost + "," : "" %><%- typeof siteHost !== "undefined" && siteHost ? "\n        siteHost: " + siteHost + "," : "" %>
+      };
+      document.documentElement.style.setProperty("--background-image-url", `url("<%- backgroundImageUrl %>")`);
+    </script>
+  </head>
+  <body
+    class="select-none font-sans min-h-screen flex flex-row flex-wrap content-start"
+  >
+    <!-- CrownFront's war table: engraved cartography, green-black iron, aged brass,
+         and legible parchment type. The existing game and controls remain the work. -->
+    <div
+      id="hex-grid"
+      class="crownfront-backdrop fixed inset-0 -z-50 pointer-events-none"
+      aria-hidden="true"
+    >
+      <div id="background-layer"></div>
+    </div>
+    <div
+      id="mobile-menu-backdrop"
+      class="lg:hidden! in-[.in-game]:hidden hidden pointer-events-none [&.open]:block [&.open]:pointer-events-auto [&.open]:fixed [&.open]:inset-0 [&.open]:bg-black/60 [&.open]:z-[40000]"
+      role="presentation"
+      aria-hidden="true"
+    ></div>
+    <mobile-nav-bar
+      id="sidebar-menu"
+      class="peer [.in-game_&]:hidden z-[40001] fixed left-0 top-0 h-full flex flex-col overflow-visible transition-transform duration-300 -translate-x-full w-[80%] max-w-[340px] [&.open]:translate-x-0 lg:hidden"
+      role="dialog"
+      data-i18n-aria-label="main.menu"
+    ></mobile-nav-bar>
+    <div
+      class="in-[.in-game]:hidden flex-1 basis-full min-w-0 min-h-dvh in-[.page-open]:min-h-0 in-[.page-open]:overflow-hidden relative flex flex-col"
+    >
+      <desktop-nav-bar class="sticky top-0 z-[60]"></desktop-nav-bar>
+      <banned-modal></banned-modal>
+      <main-layout class="contents">
+        <play-page class="contents"></play-page>
+        <matchmaking-modal
+          id="page-matchmaking"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></matchmaking-modal>
+        <news-modal
+          id="page-news"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></news-modal>
+        <single-player-modal
+          id="page-single-player"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></single-player-modal>
+        <host-lobby-modal
+          id="page-host-lobby"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></host-lobby-modal>
+        <join-lobby-modal
+          id="page-join-lobby"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></join-lobby-modal>
+        <store-modal
+          id="page-item-store"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></store-modal>
+        <user-setting
+          id="page-settings"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></user-setting>
+        <leaderboard-modal
+          id="page-leaderboard"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></leaderboard-modal>
+        <troubleshooting-modal
+          id="page-troubleshooting"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></troubleshooting-modal>
+        <clan-modal
+          id="page-clan"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></clan-modal>
+        <account-modal
+          id="page-account"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></account-modal>
+        <game-stats-modal
+          id="page-stats"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></game-stats-modal>
+        <player-profile-modal
+          id="page-profile"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></player-profile-modal>
+        <help-modal
+          id="page-help"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></help-modal>
+        <language-modal
+          id="page-language"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></language-modal>
+        <inventory-modal
+          id="page-inventory"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></inventory-modal>
+        <ranked-modal
+          id="page-ranked"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></ranked-modal>
+        <detailed-view-modal
+          id="page-detailed-view"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></detailed-view-modal>
+      </main-layout>
+      <div class="[.in-game_&]:hidden mt-auto flex flex-col shrink-0">
+        <page-footer></page-footer>
+      </div>
+      <account-settings-modal></account-settings-modal>
+      <change-username-modal></change-username-modal>
+    </div>
+    <div id="app"></div>
+    <div
+      class="fixed bottom-0 left-0 w-full z-[200] flex flex-col pointer-events-none sm:flex-row sm:items-end lg:grid lg:grid-cols-[1fr_500px_1fr] lg:items-end min-[1200px]:px-4"
+      style="
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+      "
+    >
+      <div
+        class="contents sm:flex sm:flex-col sm:pointer-events-none w-full sm:w-[500px] lg:col-start-2 sm:z-10"
+      >
+        <attacks-display
+          class="w-full pointer-events-auto order-1 sm:order-none"
+        ></attacks-display>
+        <tutorial-panel
+          class="hidden w-full order-3 sm:order-none"
+        ></tutorial-panel>
+        <div class="crownfront-hud pointer-events-auto order-3 sm:order-none">
+          <control-panel class="w-full"></control-panel>
+          <unit-display class="hidden lg:block w-full"></unit-display>
+        </div>
+      </div>
+      <div
+        class="flex flex-col pointer-events-none items-end order-2 sm:order-none sm:flex-1 lg:col-start-3 lg:self-end lg:justify-end"
+      >
+        <chat-display
+          class="w-full sm:w-auto pointer-events-auto"
+        ></chat-display>
+        <events-display
+          class="w-full sm:w-auto pointer-events-auto"
+        ></events-display>
+        <actionable-events
+          class="w-full sm:w-auto pointer-events-auto"
+        ></actionable-events>
+      </div>
+    </div>
+    <emoji-table></emoji-table>
+    <build-menu></build-menu>
+    <win-modal></win-modal>
+    <new-lobby-prompt></new-lobby-prompt>
+    <game-starting-modal></game-starting-modal>
+    <div class="flex flex-col items-end fixed top-0 right-0 z-1000 gap-2">
+      <game-right-sidebar></game-right-sidebar>
+      <replay-panel></replay-panel>
+    </div>
+    <settings-modal></settings-modal>
+    <user-setting id="game-settings"></user-setting>
+    <player-panel></player-panel>
+    <spawn-timer></spawn-timer>
+    <immunity-timer></immunity-timer>
+    <!-- Kept inert for the renderer's controller wiring; local ads are disabled. -->
+    <in-game-promo class="hidden"></in-game-promo>
+    <alert-frame></alert-frame>
+    <chat-modal></chat-modal>
+    <multi-tab-modal></multi-tab-modal>
+    <game-left-sidebar></game-left-sidebar>
+    <performance-overlay></performance-overlay>
+    <player-info-overlay></player-info-overlay>
+    <heads-up-message></heads-up-message>
+    <script>
+      window.addEventListener("load", function () {
+        requestAnimationFrame(() =>
+          document.documentElement.classList.remove("preload"),
+        );
+      });
+      setTimeout(
+        () => document.documentElement.classList.remove("preload"),
+        3000,
+      );
+      window.__toggleSidebar = function () {
+        const sidebar = document.getElementById("sidebar-menu");
+        const backdrop = document.getElementById("mobile-menu-backdrop");
+        if (!sidebar || !backdrop) return;
+        const open = !sidebar.classList.contains("open");
+        sidebar.classList.toggle("open", open);
+        backdrop.classList.toggle("open", open);
+        document.documentElement.classList.toggle("overflow-hidden", open);
+        sidebar.setAttribute("aria-hidden", String(!open));
+        backdrop.setAttribute("aria-hidden", String(!open));
+        if (open) sidebar.setAttribute("aria-modal", "true");
+        else sidebar.removeAttribute("aria-modal");
+        document
+          .getElementById("hamburger-btn")
+          ?.setAttribute("aria-expanded", String(open));
+      };
+      document.getElementById("mobile-menu-backdrop").onclick =
+        window.__toggleSidebar;
+      document.addEventListener("keydown", function (event) {
+        if (
+          event.key === "Escape" &&
+          document.getElementById("sidebar-menu").classList.contains("open")
+        )
+          window.__toggleSidebar();
+      });
+    </script>
+    <script type="module" src="/src/client/Main.ts"></script>
+  </body>
+</html>
